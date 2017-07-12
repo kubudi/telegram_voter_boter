@@ -65,7 +65,7 @@ you ca ask me these questions:
 '''
 #---
 #constant for now
-related_chat = '-1001124075229'
+related_chat = '-134366971'
 api_key = '348516303:AAHquhUlBr4OdA-EfpBSado5A848AgpMtuE'
 base_url = 'https://api.telegram.org/bot'
 

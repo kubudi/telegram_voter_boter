@@ -7,7 +7,6 @@ from boto.dynamodb2.types import NUMBER
 from boto.dynamodb2.exceptions import ItemNotFound
 from time import sleep
 from datetime import timedelta, datetime
-from urllib import urlopen
 
 what_message = '''
   voting system for user posts.
@@ -98,14 +97,14 @@ thirty_seconds = timedelta(seconds=20)
 
 #-----
 def get_table():
-  conn = boto.dynamodb2.connect_to_region('eu-central-1', aws_access_key_id='AKIAJVO5CLGHJNRYIDEQ', aws_secret_access_key='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')
+  conn = boto.dynamodb2.connect_to_region('eu-central-1', aws_access_key_id='AKIAIKDDC3ABD5JKQ6XQ', aws_secret_access_key='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')
   table = Table('test_bot', connection=conn)
   return table
 
 table = get_table()
 
 def get_updates():
-  json_res = urlopen('{}{}/getUpdates'.format(base_url, api_key)).read()
+  json_res = urllib.urlopen('{}{}/getUpdates'.format(base_url, api_key)).read()
   res = json.loads(json_res)
   updates = res['result']
 
@@ -114,10 +113,10 @@ def get_updates():
 
 def remove_processed(last_read):
   # print('Removing processed updates')
-  urlopen('{}{}/getUpdates?offset={}'.format(base_url, api_key, last_read)).read()
+  urllib.urlopen('{}{}/getUpdates?offset={}'.format(base_url, api_key, last_read)).read()
 
 def get_member_count(chat_id):
-  member_count_json = urlopen('{}{}/getChatMembersCount?chat_id={}'.format(base_url, api_key, chat_id)).read()
+  member_count_json = urllib.urlopen('{}{}/getChatMembersCount?chat_id={}'.format(base_url, api_key, chat_id)).read()
   member_count = json.loads(member_count_json)['result']
 
   # print('Member count is {}'.format(member_count))
@@ -170,8 +169,8 @@ def calculate_point(vote, message, share):
   within_hour = (message['date'] - message['reply_to_message']['date']) < 3600
   first_upvote = share['first_upvote']
   first_downvote = share['first_downvote']
-  full_house = share['upvote_count'] == (member_count - 2)
-  all_out = share['downvote_count'] == (member_count - 2)
+  full_house = share['upvote_count'] == (member_count - 3)
+  all_out = share['downvote_count'] == (member_count - 3)
 
   #calculate_point
   if(vote == 'upvote'):
@@ -183,7 +182,7 @@ def calculate_point(vote, message, share):
   elif(vote == 'downvote'):
     point = 0
     if not first_downvote: point += -1
-    if all_out: point = member_count * -10
+    if all_out: point = (member_count * -10) / 2
 
 
   print('Point calculated: {}'.format(point))
@@ -208,7 +207,7 @@ def is_song(message):
   reply = message['reply_to_message']
   if('text' in reply):
     text = reply['text']
-    return ('www.youtube.com' in text) or ('spotify:track' in text) or ('open.spotify.com' in text)
+    return ('www.youtube.com' in text) or ('youtu.be' in text) or ('spotify:track' in text) or ('open.spotify.com' in text)
   else:
     return False
 
@@ -242,31 +241,31 @@ def process_vote(message):
   return 'Processing vote finished'
 
 def command_help(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, help_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, help_message)).read()
 
 def command_what(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, what_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, what_message)).read()
 
 def command_why(chat_id):
-  urlopen('{}{}/sendDocument?chat_id={}&document=https://media.giphy.com/media/FxEwsOF1D79za/giphy.gif'.format(base_url, api_key, chat_id)).read()
+  urllib.urlopen('{}{}/sendDocument?chat_id={}&document=https://media.giphy.com/media/FxEwsOF1D79za/giphy.gif'.format(base_url, api_key, chat_id)).read()
 
 def command_how(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, how_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, how_message)).read()
 
 def command_with(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, with_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, with_message)).read()
 
 def command_where(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, where_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, where_message)).read()
 
 def command_who(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, who_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, who_message)).read()
 
 def command_other(chat_id):
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, other_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, other_message)).read()
 
 def command_forbidden(chat_id):
-  urlopen('{}{}/sendDocument?chat_id={}&document=https://s-media-cache-ak0.pinimg.com/originals/6a/c1/15/6ac1159890ca89ab59ff5f99761464af.gif'.format(base_url, api_key, chat_id)).read()
+  urllib.urlopen('{}{}/sendDocument?chat_id={}&document=https://s-media-cache-ak0.pinimg.com/originals/6a/c1/15/6ac1159890ca89ab59ff5f99761464af.gif'.format(base_url, api_key, chat_id)).read()
 
 def command_stats(chat_id):
   shares = table.scan()
@@ -284,7 +283,7 @@ def command_stats(chat_id):
   for key, value in stats.iteritems():
     stats_message += "@{}: {} \n".format(key, value)
 
-  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, stats_message)).read()
+  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, stats_message)).read()
 
 def process_command(message, chat_id):
   print('Command found, processing...')

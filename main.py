@@ -6,16 +6,19 @@ from boto.dynamodb2.table import Table, Item
 from boto.dynamodb2.types import NUMBER
 from boto.dynamodb2.exceptions import ItemNotFound
 from time import sleep
+from datetime import timedelta, datetime
+from urllib import urlopen
 
 what_message = '''
   voting system for user posts.
 
-  * you can vote a post by replying it with thumbs up or thumbs down.
-  * stickers works too
-  * only first vote will count for every member
-  * you cannot vote yourself
-  * you cannot remove your vote
-  * ethics are nice, have them
+  voting rules:
+  * first upvote is 1 points, rest is 2
+  * first downvote does not count, rest is -1
+  * if you get full house(upvote from all members) you get member_count*10 points
+  * if you get all out(downvote from all members) you lose member_count*10/2 points
+  * sequential upvotes(upvotes until first downvote) receives multiplier
+  * upvotes within an hour after post gets +member_count points
 
   at the end of each week, member with highest points wins, and gets to have a chance to add someone to the group, or have one coffee(type-place is his choice) from the rest of group members.
 
@@ -23,13 +26,14 @@ what_message = '''
 '''
 #---
 how_message = '''
-  voting rules:
-  * first upvote is 1 points, rest is 2
-  * first downvote does not count, rest is -1
-  * if you get full house(upvote from all members) you get member_count*10 points
-  * if you get all out(downvote from all members) you get member_count*10/2 points
-  * sequential upvotes(upvotes until first downvote) receives multiplier
-  * upvotes within an hour after post gets +member_count points
+
+  * you can vote a post by replying it with thumbs up or thumbs down.
+  * stickers works too
+  * only first vote will count for every member
+  * you cannot vote yourself
+  * you cannot remove/edit your vote
+  * you can only vote spotify and youtube links
+  * ethics are nice, have them
 '''
 #---
 with_message = '''
@@ -61,12 +65,38 @@ you ca ask me these questions:
 * /who
 '''
 #---
-
 #constant for now
 related_chat = '-1001124075229'
 api_key = '348516303:AAHquhUlBr4OdA-EfpBSado5A848AgpMtuE'
 base_url = 'https://api.telegram.org/bot'
 
+#Commands
+help  = '/help'
+what  = '/what'
+why   = '/why'
+how   = '/how'
+_with = '/with'
+where = '/where'
+who   = '/who'
+stats = '/stats'
+
+#spam preventer
+default = datetime.now()
+last_run_time = {
+  help: default,
+  what: default,
+  why: default,
+  how: default,
+  _with: default,
+  where: default,
+  who: default,
+  stats: default,
+  'other': default
+}
+
+thirty_seconds = timedelta(seconds=20)
+
+#-----
 def get_table():
   conn = boto.dynamodb2.connect_to_region('eu-central-1', aws_access_key_id='AKIAJVO5CLGHJNRYIDEQ', aws_secret_access_key='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')
   table = Table('test_bot', connection=conn)
@@ -75,7 +105,7 @@ def get_table():
 table = get_table()
 
 def get_updates():
-  json_res = urllib.urlopen('{}{}/getUpdates'.format(base_url, api_key)).read()
+  json_res = urlopen('{}{}/getUpdates'.format(base_url, api_key)).read()
   res = json.loads(json_res)
   updates = res['result']
 
@@ -84,10 +114,10 @@ def get_updates():
 
 def remove_processed(last_read):
   # print('Removing processed updates')
-  urllib.urlopen('{}{}/getUpdates?offset={}'.format(base_url, api_key, last_read)).read()
+  urlopen('{}{}/getUpdates?offset={}'.format(base_url, api_key, last_read)).read()
 
 def get_member_count(chat_id):
-  member_count_json = urllib.urlopen('{}{}/getChatMembersCount?chat_id={}'.format(base_url, api_key, chat_id)).read()
+  member_count_json = urlopen('{}{}/getChatMembersCount?chat_id={}'.format(base_url, api_key, chat_id)).read()
   member_count = json.loads(member_count_json)['result']
 
   # print('Member count is {}'.format(member_count))
@@ -140,8 +170,8 @@ def calculate_point(vote, message, share):
   within_hour = (message['date'] - message['reply_to_message']['date']) < 3600
   first_upvote = share['first_upvote']
   first_downvote = share['first_downvote']
-  full_house = share['upvote_count'] == (member_count - 1)
-  all_out = share['downvote_count'] == (member_count - 1)
+  full_house = share['upvote_count'] == (member_count - 2)
+  all_out = share['downvote_count'] == (member_count - 2)
 
   #calculate_point
   if(vote == 'upvote'):
@@ -211,33 +241,32 @@ def process_vote(message):
   update_share(share, vote, point, user_who_score)
   return 'Processing vote finished'
 
-# def command_help():
 def command_help(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, help_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, help_message)).read()
 
 def command_what(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, what_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, what_message)).read()
 
 def command_why(chat_id):
-  urllib.urlopen('{}{}/sendDocument?chat_id={}&document=https://media.giphy.com/media/FxEwsOF1D79za/giphy.gif'.format(base_url, api_key, chat_id)).read()
+  urlopen('{}{}/sendDocument?chat_id={}&document=https://media.giphy.com/media/FxEwsOF1D79za/giphy.gif'.format(base_url, api_key, chat_id)).read()
 
 def command_how(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, how_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, how_message)).read()
 
 def command_with(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, with_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, with_message)).read()
 
 def command_where(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, where_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, where_message)).read()
 
 def command_who(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, who_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, who_message)).read()
 
 def command_other(chat_id):
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, other_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, other_message)).read()
 
 def command_forbidden(chat_id):
-  urllib.urlopen('{}{}/sendDocument?chat_id={}&document=https://s-media-cache-ak0.pinimg.com/originals/6a/c1/15/6ac1159890ca89ab59ff5f99761464af.gif'.format(base_url, api_key, chat_id)).read()
+  urlopen('{}{}/sendDocument?chat_id={}&document=https://s-media-cache-ak0.pinimg.com/originals/6a/c1/15/6ac1159890ca89ab59ff5f99761464af.gif'.format(base_url, api_key, chat_id)).read()
 
 def command_stats(chat_id):
   shares = table.scan()
@@ -255,29 +284,70 @@ def command_stats(chat_id):
   for key, value in stats.iteritems():
     stats_message += "@{}: {} \n".format(key, value)
 
-  urllib.urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, stats_message)).read()
+  urlopen('{}{}/sendMessage?chat_id={}&text={}'.format(base_url, api_key, chat_id, stats_message)).read()
 
 def process_command(message, chat_id):
   print('Command found, processing...')
-  help  = '/help'
-  what  = '/what'
-  why   = '/why'
-  how   = '/how'
-  _with = '/with'
-  where = '/where'
-  who   = '/who'
-  stats = '/stats'
 
-  if  (help   in message['text']): command_help(chat_id)
-  elif(what   in message['text']): command_what(chat_id)
-  elif(why    in message['text']): command_why(chat_id)
-  elif(how    in message['text']): command_how(chat_id)
-  elif(_with  in message['text']): command_with(chat_id)
-  elif(where  in message['text']): command_where(chat_id)
-  elif(who    in message['text']): command_who(chat_id)
-  elif('yarr' in message['text']): command_forbidden(chat_id)
-  elif(stats  in message['text']): command_stats(chat_id)
-  else                           : command_other(chat_id)
+
+  now = datetime.now()
+
+  if(help in message['text']):
+    if(now - last_run_time[help]> thirty_seconds):
+      last_run_time[help]= now
+      command_help(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif(what in message['text']):
+    if(now - last_run_time[what]> thirty_seconds):
+      last_run_time[what]= now
+      command_what(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif(why in message['text']):
+    if(now - last_run_time[why]> thirty_seconds):
+      last_run_time[why]= now
+      command_why(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif(how in message['text']):
+    if(now - last_run_time[how]> thirty_seconds):
+      last_run_time[how]= now
+      command_how(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif(_with in message['text']):
+    if(now - last_run_time[_with]> thirty_seconds):
+      last_run_time[_with]= now
+      command_with(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif(where in message['text']):
+    if(now - last_run_time[where]> thirty_seconds):
+      last_run_time[where]= now
+      command_where(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif(who in message['text']):
+    if(now - last_run_time[who]> thirty_seconds):
+      last_run_time[who]= now
+      command_who(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  elif('yarr' in message['text']):
+      command_forbidden(chat_id)
+  elif(stats in message['text']):
+    if(now - last_run_time[stats]> thirty_seconds):
+      last_run_time[stats]= now
+      command_stats(chat_id)
+    else:
+      return "Just ran the command, ignoring"
+  else:
+    if(now - last_run_time['other'] > thirty_seconds):
+      last_run_time['other'] = now
+      command_other(chat_id)
+    else:
+      return "Just ran the command, ignoring"
 
   return "Command executed"
 

@@ -90,6 +90,7 @@ last_run_time = {
   where: default,
   who: default,
   stats: default,
+  'yarr': default,
   'other': default
 }
 
@@ -334,7 +335,11 @@ def process_command(message, chat_id):
     else:
       return "Just ran the command, ignoring"
   elif('yarr' in message['text']):
-      command_forbidden(chat_id)
+      if(now - last_run_time[who]> thirty_seconds):
+        last_run_time['yarr']= now
+        command_forbidden(chat_id)
+      else:
+        return "Just ran the command, ignoring"
   elif(stats in message['text']):
     if(now - last_run_time[stats]> thirty_seconds):
       last_run_time[stats]= now

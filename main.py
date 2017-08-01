@@ -148,6 +148,7 @@ def get_vote(message):
   thumbs_up = u'\ud83d\udc4d' 
   thumbs_down = u'\ud83d\udc4e'
 
+  vote = 0
   if('text' in message):
     if(thumbs_up in message['text']):
       vote = 'upvote'

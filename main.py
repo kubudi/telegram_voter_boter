@@ -12,12 +12,12 @@ what_message = '''
   voting system for user posts.
 
   voting rules:
-  * first upvote is 1 points, rest is 2
-  * first downvote does not count, rest is -1
-  * if you get full house(upvote from all members) you get member_count*10 points
-  * if you get all out(downvote from all members) you lose member_count*10/2 points
-  * sequential upvotes(upvotes until first downvote) receives multiplier
-  * upvotes within an hour after post gets +member_count points
+  first upvote is 1 points, rest is 2
+  first downvote does not count, rest is -1
+  if you get full house(upvote from all members) you get member_count*10 points
+  if you get all out(downvote from all members) you lose member_count*10/2 points
+  sequential upvotes(upvotes until first downvote) receives multiplier
+  upvotes within an hour after post gets +member_count points
 
   at the end of each week, member with highest points wins, and gets to have a chance to add someone to the group, or have one coffee(type-place is his choice) from the rest of group members.
 
@@ -26,20 +26,20 @@ what_message = '''
 #---
 how_message = '''
 
-  * you can vote a post by replying it with thumbs up or thumbs down.
-  * stickers works too
-  * only first vote will count for every member
-  * you cannot vote yourself
-  * you cannot remove/edit your vote
-  * you can only vote spotify and youtube links
-  * ethics are nice, have them
+  you can vote a post by replying it with thumbs up or thumbs down.
+  stickers works too
+  only first vote will count for every member
+  you cannot vote yourself
+  you cannot remove/edit your vote
+  you can only vote spotify and youtube links
+  ethics are nice, have them
 '''
 #---
 with_message = '''
-  * python
-  * dynamodb
-  * boto
-  * love
+  python
+  dynamodb
+  boto
+  love
 '''
 #---
 where_message = '''
@@ -55,13 +55,14 @@ other_message = '''
 '''
 #---
 help_message = '''
-you ca ask me these questions:
-* /what
-* /why
-* /how
-* /with
-* /where
-* /who
+you can ask me these questions:
+/stats
+/what
+/why
+/how
+/with
+/where
+/who
 '''
 #---
 #constant for now
@@ -94,12 +95,11 @@ last_run_time = {
   'other': default
 }
 
-thirty_seconds = timedelta(seconds=20)
+silent_period = timedelta(seconds=30)
 
 #-----
 def get_table():
-  conn = boto.dynamodb2.connect_to_region('eu-central-1', aws_access_key_id='AKIAIKDDC3ABD5JKQ6XQ', aws_secret_access_key='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')
-  table = Table('test_bot', connection=conn)
+  table = Table('test_bot')
   return table
 
 table = get_table()
@@ -293,61 +293,61 @@ def process_command(message, chat_id):
   now = datetime.now()
 
   if(help in message['text']):
-    if(now - last_run_time[help]> thirty_seconds):
+    if(now - last_run_time[help]> silent_period):
       last_run_time[help]= now
       command_help(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif(what in message['text']):
-    if(now - last_run_time[what]> thirty_seconds):
+    if(now - last_run_time[what]> silent_period):
       last_run_time[what]= now
       command_what(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif(why in message['text']):
-    if(now - last_run_time[why]> thirty_seconds):
+    if(now - last_run_time[why]> silent_period):
       last_run_time[why]= now
       command_why(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif(how in message['text']):
-    if(now - last_run_time[how]> thirty_seconds):
+    if(now - last_run_time[how]> silent_period):
       last_run_time[how]= now
       command_how(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif(_with in message['text']):
-    if(now - last_run_time[_with]> thirty_seconds):
+    if(now - last_run_time[_with]> silent_period):
       last_run_time[_with]= now
       command_with(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif(where in message['text']):
-    if(now - last_run_time[where]> thirty_seconds):
+    if(now - last_run_time[where]> silent_period):
       last_run_time[where]= now
       command_where(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif(who in message['text']):
-    if(now - last_run_time[who]> thirty_seconds):
+    if(now - last_run_time[who]> silent_period):
       last_run_time[who]= now
       command_who(chat_id)
     else:
       return "Just ran the command, ignoring"
   elif('yarr' in message['text']):
-      if(now - last_run_time[who]> thirty_seconds):
+      if(now - last_run_time['yarr']> silent_period):
         last_run_time['yarr']= now
         command_forbidden(chat_id)
       else:
         return "Just ran the command, ignoring"
   elif(stats in message['text']):
-    if(now - last_run_time[stats]> thirty_seconds):
+    if(now - last_run_time[stats]> silent_period):
       last_run_time[stats]= now
       command_stats(chat_id)
     else:
       return "Just ran the command, ignoring"
   else:
-    if(now - last_run_time['other'] > thirty_seconds):
+    if(now - last_run_time['other'] > silent_period):
       last_run_time['other'] = now
       command_other(chat_id)
     else:

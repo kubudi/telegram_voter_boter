@@ -145,8 +145,8 @@ def get_share(share_to_score, user_to_score):
 
 def get_vote(message):
   #unicode thumbs
-  thumbs_up = u'\ud83d\udc4d' 
-  thumbs_down = u'\ud83d\udc4e'
+  thumbs_up = u'\U0001f44d'
+  thumbs_down = u'\U0001f44e'
 
   vote = 0
   if('text' in message):
@@ -176,7 +176,7 @@ def calculate_point(vote, message, share):
 
   #calculate_point
   point = 0
-  
+
   if(vote == 'upvote'):
     point = 1
     if not first_upvote: point += 1

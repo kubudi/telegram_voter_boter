@@ -175,6 +175,8 @@ def calculate_point(vote, message, share):
   all_out = share['downvote_count'] == (member_count - 3)
 
   #calculate_point
+  point = 0
+  
   if(vote == 'upvote'):
     point = 1
     if not first_upvote: point += 1

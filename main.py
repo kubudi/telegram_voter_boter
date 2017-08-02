@@ -337,12 +337,12 @@ def process_command(message, chat_id):
       command_who(chat_id)
     else:
       return "Just ran the command, ignoring"
-  elif('yarr' in message['text']):
-      if(now - last_run_time['yarr']> silent_period):
-        last_run_time['yarr']= now
-        command_forbidden(chat_id)
-      else:
-        return "Just ran the command, ignoring"
+  # elif('yarr' in message['text']):
+  #     if(now - last_run_time['yarr']> silent_period):
+  #       last_run_time['yarr']= now
+  #       command_forbidden(chat_id)
+  #     else:
+  #       return "Just ran the command, ignoring"
   elif(stats in message['text']):
     if(now - last_run_time[stats]> silent_period):
       last_run_time[stats]= now

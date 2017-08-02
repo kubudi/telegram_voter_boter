@@ -359,35 +359,35 @@ def process_command(message, chat_id):
   return "Command executed"
 
 def main():
-  updates = get_updates()
+  while(True):
+    updates = get_updates()
 
-  for update in updates[1:]:
-    print('--------')
-    if('message' not in update):
-      print("Not a message, probably edit")
-    else:
-      message = update['message']
-      chat_id = str(message['chat']['id'])
-      #check if it's the correct channel
-      if(chat_id != related_chat):
-        print('Not this channel')
+    for update in updates[1:]:
+      print('--------')
+      if('message' not in update):
+        print("Not a message, probably edit")
       else:
-        #if it is a reply
-        if('reply_to_message' in message):
-          process_res = process_vote(message)
-          print(process_res)
-        elif('entities' in message and message['entities'][0]["type"] == 'bot_command'):
-          process_res = process_command(message, chat_id)
-          print(process_res)
+        message = update['message']
+        chat_id = str(message['chat']['id'])
+        #check if it's the correct channel
+        if(chat_id != related_chat):
+          print('Not this channel')
         else:
-          print('nothing to do')
+          #if it is a reply
+          if('reply_to_message' in message):
+            process_res = process_vote(message)
+            print(process_res)
+          elif('entities' in message and message['entities'][0]["type"] == 'bot_command'):
+            process_res = process_command(message, chat_id)
+            print(process_res)
+          else:
+            print('nothing to do')
 
-  latest_id = str(updates[-1]['update_id'])
-  # print('latest_id is: ' + latest_id)
-  remove_processed(latest_id)
-  sleep(1)
-  main()
-  return 'Success'
+    latest_id = str(updates[-1]['update_id'])
+    # print('latest_id is: ' + latest_id)
+    remove_processed(latest_id)
+    sleep(3)
+  return 'Finished'
 
 
 res = main()
